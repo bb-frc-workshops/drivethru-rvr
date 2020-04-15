@@ -43,6 +43,10 @@ export class RvrRobotController extends RobotControllerBase {
         this.setupServoPins();
 
         this._rvr.wake();
+        this._rvr.getBatteryPercentage()
+            .then(battPct => {
+                console.log("RVR Battery Percentage: " + battPct);
+            });
     }
 
     private setupDigitalPins(): void {

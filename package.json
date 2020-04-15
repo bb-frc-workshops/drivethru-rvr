@@ -28,6 +28,6 @@
   },
   "dependencies": {
     "@bbfrc/drivethru": "^1.0.6",
-    "sphero-rvr-base": "^0.1.0"
+    "sphero-rvr-base": "^0.2.0"
   }
 }
