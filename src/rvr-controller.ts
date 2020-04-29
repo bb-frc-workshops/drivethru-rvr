@@ -54,6 +54,10 @@ export class RvrRobotController extends RobotControllerBase {
 
     private _analogInValues: number[] = [];
 
+    private _digitalReadCallbacks: {[channel: number]: (port: number, value: boolean) => void } = {};
+    private _analogReadCallbacks: {[channel: number]: (port: number, value: number) => void} = {};
+
+
     // TODO this should be configurable, maybe via JSON file?
     private readonly _numDigitalPins: number = 6;
     private readonly _numAnalogPins: number = 7;
@@ -141,15 +145,28 @@ export class RvrRobotController extends RobotControllerBase {
             this._analogInValues[i] = 0;
         }
 
+        for (let i = 0; i < this._numAnalogPins; i++) {
+            this._analogPins.push({
+                hwPin: hwPinStart + i,
+                mode: PinModeToFirmataPinMode(PinMode.ANALOG),
+                supportedModes: [PinModeToFirmataPinMode(PinMode.SERVO)],
+                value: 0
+            });
+        }
+
         // TODO This configuration of sensor services should be done programatically
         this._rvr.enableSensor("Accelerometer", (sensorData: IAccelerometerData) => {
             const x = constrain(mapValue(sensorData.X, -16.0, 16.0, 0, 1023), 0, 1023);
             const y = constrain(mapValue(sensorData.Y, -16.0, 16.0, 0, 1023), 0, 1023);
             const z = constrain(mapValue(sensorData.Z, -16.0, 16.0, 0, 1023), 0, 1023);
 
-            this._analogInValues[0] = x;
-            this._analogInValues[1] = y;
-            this._analogInValues[2] = z;
+            this._analogPins[0].value = x;
+            this._analogPins[1].value = y;
+            this._analogPins[2].value = z;
+
+            this.handleAnalogReadCallback(0, x);
+            this.handleAnalogReadCallback(1, y);
+            this.handleAnalogReadCallback(2, z);
 
             // { X, Y, Z all double, [-16.0, 16.0]}
             // console.log("accel: ", sensorData);
@@ -159,10 +176,15 @@ export class RvrRobotController extends RobotControllerBase {
         this._rvr.enableColorDetection(true);
         this._rvr.enableSensor("ColorDetection", (sensorData: IColorDetectionData) => {
             if (sensorData.Index === 255) {
-                this._analogInValues[3] = 0;
-                this._analogInValues[4] = 0;
-                this._analogInValues[5] = 0;
-                this._analogInValues[6] = 0;
+                this._analogPins[3].value = 0;
+                this._analogPins[4].value = 0;
+                this._analogPins[5].value = 0;
+                this._analogPins[6].value = 0;
+
+                this.handleAnalogReadCallback(3, 0);
+                this.handleAnalogReadCallback(4, 0);
+                this.handleAnalogReadCallback(5, 0);
+                this.handleAnalogReadCallback(6, 0);
                 return;
             }
 
@@ -171,24 +193,22 @@ export class RvrRobotController extends RobotControllerBase {
             const b = constrain(mapValue(sensorData.B, 0, 255, 0, 1023), 0, 1023);
             const confidence = constrain(mapValue(sensorData.Confidence, 0.0, 1.0, 0, 1023), 0, 1023);
 
-            this._analogInValues[3] = r;
-            this._analogInValues[4] = g;
-            this._analogInValues[5] = b;
-            this._analogInValues[6] = confidence;
+            this._analogPins[3].value = r;
+            this._analogPins[4].value = g;
+            this._analogPins[5].value = b;
+            this._analogPins[6].value = confidence;
+
+            this.handleAnalogReadCallback(3, r);
+            this.handleAnalogReadCallback(4, g);
+            this.handleAnalogReadCallback(5, b);
+            this.handleAnalogReadCallback(6, confidence);
             // { R: 0-255, G: 0-255, B: 0-255, Index: int (255 if no color), Confidence: [0,1]}
             // console.log("color: ", sensorData);
         });
 
         this._rvr.startSensorStreaming([], 100);
 
-        for (let i = 0; i < this._numAnalogPins; i++) {
-            this._analogPins.push({
-                hwPin: hwPinStart + i,
-                mode: PinModeToFirmataPinMode(PinMode.ANALOG),
-                supportedModes: [PinModeToFirmataPinMode(PinMode.SERVO)],
-                value: 0
-            });
-        }
+
 
     }
 
@@ -282,11 +302,39 @@ export class RvrRobotController extends RobotControllerBase {
     }
 
     public getAnalogValue(port: number): number {
-        return 0;
+        if (!this._analogPins[port]) {
+            return 0;
+        }
+        return this._analogPins[port].value as number;
     }
 
     public subscribeToAnalogValue(port: number, value: boolean): void {
-        // no-op
+        if (!this._analogPins[port]) {
+            return;
+        }
+
+        if (!this._isReady) {
+            return;
+        }
+
+        if (this._analogReadCallbacks[port] === undefined) {
+            const cb = this.handleAnalogReadCallback.bind(this, port);
+            this._analogReadCallbacks[port] = cb;
+        }
+    }
+
+    private handleAnalogReadCallback(port: number, value: number): void {
+        if (!this._analogPins[port]) {
+            return;
+        }
+
+        this._analogPins[port].value = value;
+
+        // Also emit an event
+        this.emit("analogRead", {
+            port,
+            value
+        });
     }
 
     public subscribeToDigitalValue(port: number, value: boolean): void {
