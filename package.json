@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/bb-frc-workshops/drivethru-rvr#readme",
   "devDependencies": {
+    "@types/color": "^3.0.1",
     "@types/firmata": "^0.19.2",
     "@types/flatbuffers": "^1.10.0",
     "@types/serialport": "^8.0.0",
@@ -27,7 +28,8 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@bbfrc/drivethru": "^1.0.6",
+    "@bbfrc/drivethru": "^1.1.0",
+    "commander": "^5.1.0",
     "sphero-rvr-base": "^0.2.0"
   }
 }
