@@ -28,7 +28,7 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@bbfrc/drivethru": "^1.1.0",
+    "@bbfrc/drivethru": "^1.2.0",
     "commander": "^5.1.0",
     "sphero-rvr-base": "^0.2.0"
   }

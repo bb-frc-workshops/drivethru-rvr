@@ -1,4 +1,4 @@
-import { RobotControllerBase, IPortInformation, DigitalPinMode, PinMode, PinModeToFirmataPinMode } from "@bbfrc/drivethru";
+import { RobotControllerBase, IPortInformation, PinMode } from "@bbfrc/drivethru";
 import { SpheroRVR, LED, SerialTransport, RawMotorModes } from "sphero-rvr-base";
 
 interface IAccelerometerData {
@@ -115,8 +115,8 @@ export class RvrRobotController extends RobotControllerBase {
         for (let i = 0; i < 6; i++) {
             this._digitalPins.push({
                 hwPin: hwPinStart + i,
-                mode: PinModeToFirmataPinMode(PinMode.OUTPUT),
-                supportedModes: [PinModeToFirmataPinMode(PinMode.OUTPUT)],
+                mode: PinMode.OUTPUT,
+                supportedModes: [PinMode.OUTPUT],
                 value: false
             });
         }
@@ -128,8 +128,8 @@ export class RvrRobotController extends RobotControllerBase {
         for (let i = 0; i < this._numServoPins; i++) {
             this._servoPins.push({
                 hwPin: hwPinStart + i,
-                mode: PinModeToFirmataPinMode(PinMode.SERVO),
-                supportedModes: [PinModeToFirmataPinMode(PinMode.SERVO)],
+                mode: PinMode.SERVO,
+                supportedModes: [PinMode.SERVO],
                 value: 90
             });
         }
@@ -148,8 +148,8 @@ export class RvrRobotController extends RobotControllerBase {
         for (let i = 0; i < this._numAnalogPins; i++) {
             this._analogPins.push({
                 hwPin: hwPinStart + i,
-                mode: PinModeToFirmataPinMode(PinMode.ANALOG),
-                supportedModes: [PinModeToFirmataPinMode(PinMode.SERVO)],
+                mode: PinMode.ANALOG,
+                supportedModes: [PinMode.SERVO],
                 value: 0
             });
         }
@@ -238,7 +238,7 @@ export class RvrRobotController extends RobotControllerBase {
         this._rightSpeed = 0;
     }
 
-    public setDigitalPinMode(port: number, mode: DigitalPinMode): void {
+    public setDigitalPinMode(port: number, mode: PinMode): void {
         // no-op
     }
 
